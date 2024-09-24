@@ -96,16 +96,17 @@ export default class LocalFileSystem implements IStorageProvider {
     public async listFiles(folderPath: string): Promise<string[]> {
         const normalizedPath = path.normalize(folderPath);
         const files = await this.listItems(normalizedPath, (stats) => !stats.isDirectory());
-        const directories = await this.listItems(normalizedPath, (stats) => stats.isDirectory());
-        await directories.forEachAsync(async (directory) => {
-            const directoryFiles = await this.listFiles(directory);
-            directoryFiles.forEach((file) => files.push(file));
-        });
+        // const directories = await this.listItems(normalizedPath, (stats) => stats.isDirectory());
+        // await directories.forEachAsync(async (directory) => {
+        //     const directoryFiles = await this.listFiles(directory);
+        //     directoryFiles.forEach((file) => files.push(file));
+        // });
         return files;
     }
 
     public listContainers(folderPath: string): Promise<string[]> {
-        return this.listItems(path.normalize(folderPath), (stats) => stats.isDirectory());
+        //return this.listItems(path.normalize(folderPath), (stats) => stats.isDirectory());
+        return this.listItems(path.normalize(folderPath), (stats) => stats.isDirectory() && stats.isFile()); // try to sabotage this - we don't want to dig into subfolders
     }
 
     public createContainer(folderPath: string): Promise<void> {
