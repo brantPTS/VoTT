@@ -32,10 +32,11 @@ const defaultActiveLearningSettings: IActiveLearningSettings = {
 };
 
 const defaultExportOptions: IExportFormat = {
-    providerType: "vottJson",
+    providerType: "cntk",
     providerOptions: {
-        assetState: ExportAssetState.Visited,
+        assetState: ExportAssetState.Tagged,
         includeImages: true,
+        testTrainSplit: 80,
     },
 };
 
