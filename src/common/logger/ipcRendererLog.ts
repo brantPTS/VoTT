@@ -1,21 +1,18 @@
 import * as shortid from "shortid";
-import { IpcProxyMessage } from "../electron/common/ipcProxy";
-import { Deferred } from "./deferred";
-import log from "./logger/logger.renderer"
+import { IpcProxyMessage } from "../../electron/common/ipcProxy";
+import { Deferred } from "../deferred";
 
-export class IpcRendererProxy {
+export class IpcRendererLog {
 
     public static pending: { [id: string]: Deferred<any> } = {};
 
     public static initialize() {
-        if (IpcRendererProxy.initialized) {
+        if (IpcRendererLog.initialized) {
             return;
         }
-
-        IpcRendererProxy.ipcRenderer = (window as any).require("electron").ipcRenderer;
-        IpcRendererProxy.ipcRenderer.on("ipc-renderer-proxy", (sender, message: IpcProxyMessage<any>) => {
-            const deferred = IpcRendererProxy.pending[message.id];
-
+        IpcRendererLog.ipcRenderer = (window as any).require("electron").ipcRenderer;
+        IpcRendererLog.ipcRenderer.on("ipc-renderer-log", (sender, message: IpcProxyMessage<any>) => {
+            const deferred = IpcRendererLog.pending[message.id];
             if (!deferred) {
                 throw new Error(`Cannot find deferred with id '${message.id}'`);
             }
@@ -26,26 +23,27 @@ export class IpcRendererProxy {
                 deferred.resolve(message.result);
             }
 
-            delete IpcRendererProxy.pending[message.id];
+            delete IpcRendererLog.pending[message.id];
         });
 
-        IpcRendererProxy.initialized = true;
+        IpcRendererLog.initialized = true;
     }
 
     public static send<TResult, TArgs>(type: string, args?: TArgs): Promise<TResult> {
-        IpcRendererProxy.initialize();
-
+        IpcRendererLog.initialize();
         const id = shortid.generate();
         const deferred = new Deferred<TResult>();
-        IpcRendererProxy.pending[id] = deferred;
+        IpcRendererLog.pending[id] = deferred;
 
         const outgoingArgs: IpcProxyMessage<TArgs> = {
             id,
             type,
             args,
         };
-        log.info(`IpcRendererProxy Event Call with TYPE ${type}`)
-        IpcRendererProxy.ipcRenderer.send("ipc-main-proxy", outgoingArgs);
+
+        console.log(`LOG: ${type}`,outgoingArgs)
+
+        IpcRendererLog.ipcRenderer.send("ipc-main-log", outgoingArgs);
 
         return deferred.promise;
     }

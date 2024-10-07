@@ -1,20 +1,20 @@
 import { BrowserWindow, IpcMain } from "electron";
-import { IpcProxyMessage } from "./ipcProxy";
-import log from './logger/logger.main';
+import { IpcProxyMessage } from "../ipcProxy";
+import log from './logger.main';
 
-export type IpcProxyHandler<T> = (sender: any, args: T) => any;
+export type IpcLogHandler<T> = (sender: any, args: T) => any;
 
-export class IpcMainProxy {
-    private static PROXY_EVENT_NAME: string = "ipc-renderer-proxy";
+export class IpcMainLog {
+    private static PROXY_EVENT_NAME: string = "ipc-renderer-log";
 
-    public handlers: { [type: string]: IpcProxyHandler<any> } = {};
+    public handlers: { [type: string]: IpcLogHandler<any> } = {};
 
     constructor(private ipcMain: IpcMain, private browserWindow: BrowserWindow) {
         this.init();
     }
 
-    public register<T>(type: string, handler: IpcProxyHandler<T>) {
-        log.info(`Registered IpcMainProxy Handler for TYPE ${type}`)
+    public register<T>(type: string, handler: IpcLogHandler<T>) {
+        log.info(`Registered IpcMainLog Handler for TYPE ${type}`)
         this.handlers[type] = handler;
     }
 
@@ -29,9 +29,8 @@ export class IpcMainProxy {
     }
 
     private init() {
-        log.info(`IpcMainProxy Initialized`)
-        this.ipcMain.on("ipc-main-proxy", (sender: any, message: IpcProxyMessage<any>) => {
-            log.info(`IpcMainProxy Event Call with MESSAGE ${message.type}`)
+        this.ipcMain.on("ipc-main-log", (sender: any, message: IpcProxyMessage<any>) => {
+          
             const handler = this.handlers[message.type];
             if (!handler) {
                 console.log(`No IPC proxy handler defined for event type '${message.type}'`);
@@ -48,19 +47,19 @@ export class IpcMainProxy {
                     handlerValue
                         .then((result) => {
                             returnArgs.result = result;
-                            this.browserWindow.webContents.send(IpcMainProxy.PROXY_EVENT_NAME, returnArgs);
+                            this.browserWindow.webContents.send(IpcMainLog.PROXY_EVENT_NAME, returnArgs);
                         })
                         .catch((err) => {
                             returnArgs.error = err;
-                            this.browserWindow.webContents.send(IpcMainProxy.PROXY_EVENT_NAME, returnArgs);
+                            this.browserWindow.webContents.send(IpcMainLog.PROXY_EVENT_NAME, returnArgs);
                         });
                 } else {
                     returnArgs.result = handlerValue;
-                    this.browserWindow.webContents.send(IpcMainProxy.PROXY_EVENT_NAME, returnArgs);
+                    this.browserWindow.webContents.send(IpcMainLog.PROXY_EVENT_NAME, returnArgs);
                 }
             } catch (err) {
                 returnArgs.error = err;
-                this.browserWindow.webContents.send(IpcMainProxy.PROXY_EVENT_NAME, returnArgs);
+                this.browserWindow.webContents.send(IpcMainLog.PROXY_EVENT_NAME, returnArgs);
             }
         });
     }

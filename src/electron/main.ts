@@ -5,11 +5,15 @@ import {
 import registerMixins from "../registerMixins";
 import { IpcMainProxy } from "./common/ipcMainProxy";
 import LocalFileSystem from "./providers/storage/localFileSystem";
+import log from './common/logger/logger.main';
+import { IpcMainLog } from "./common/logger/ipcMainLog";
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow: BrowserWindow;
 let ipcMainProxy: IpcMainProxy;
+let ipcMainLog: IpcMainLog
+
 
 function createWindow() {
     const windowOptions: BrowserWindowConstructorOptions = {
@@ -20,13 +24,13 @@ function createWindow() {
         backgroundColor: "#272B30",
         show: false,
     };
-
+    log.info("MAIN PROCESS INITIALIZED")
     const staticUrl = process.env.ELECTRON_START_URL || `file:///${__dirname}/index.html`;
     if (process.env.ELECTRON_START_URL) {
         windowOptions.webPreferences = {
             webSecurity: false,
         };
-    }
+    } 
 
     mainWindow = new BrowserWindow(windowOptions);
     mainWindow.loadURL(staticUrl);
@@ -43,25 +47,36 @@ function createWindow() {
     // Provides a more graceful experience and eliminates the white screen on load
     // This event fires after the app first render
     mainWindow.once("ready-to-show", () => {
+        log.info("MAIN PROCESS window ready to show")
         mainWindow.show();
     });
 
     registerContextMenu(mainWindow);
 
     ipcMainProxy = new IpcMainProxy(ipcMain, mainWindow);
+    
     ipcMainProxy.register("RELOAD_APP", onReloadApp);
     ipcMainProxy.register("TOGGLE_DEV_TOOLS", onToggleDevTools);
 
     const localFileSystem = new LocalFileSystem(mainWindow);
     ipcMainProxy.registerProxy("LocalFileSystem", localFileSystem);
+
+    //ipcMainLog 
+    ipcMainLog = new IpcMainLog(ipcMain, mainWindow);
+    ipcMainLog.register("RENDERER_LOG",onRendererLog)
+}
+function onRendererLog(sender: any, message: any) { 
+    log.info(`${message}`)
 }
 
 function onReloadApp() {
+    log.info("MAIN PROCESS: Reload triggered")
     mainWindow.reload();
     return true;
 }
 
 function onToggleDevTools() {
+    log.info("MAIN PROCESS: Toggle Dev tool Triggered")
     mainWindow.webContents.toggleDevTools();
 }
 
