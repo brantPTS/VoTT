@@ -4,6 +4,7 @@ import { IAssetMetadata, IExportProviderOptions, IProject } from "../../models/a
 import HtmlFileReader from "../../common/htmlFileReader";
 import Guard from "../../common/guard";
 import { splitTestAsset } from "./testAssetsSplitHelper";
+import * as path from 'path';
 
 enum ExportSplit {
     Test,
@@ -83,8 +84,18 @@ export class CntkExportProvider extends ExportProvider<ICntkExportProviderOption
 
         const buffer = await HtmlFileReader.getAssetArray(assetMetadata.asset);
         const folderName = exportSplit === ExportSplit.Train ? "positive" : "testImages";
-        const labelsPath = `${this.exportFolderName}/${folderName}/${assetMetadata.asset.name}.bboxes.labels.tsv`;
-        const boundingBoxPath = `${this.exportFolderName}/${folderName}/${assetMetadata.asset.name}.bboxes.tsv`;
+
+
+        
+
+        
+
+        // const assetFileParsed = path.parse(assetMetadata.asset.name);
+        // const assetNameWithoutExtension = assetFileParsed.name;
+        const assetNameWithoutExtension = assetMetadata.asset.name.slice(0,-4);
+
+        const labelsPath = `${this.exportFolderName}/${folderName}/${assetNameWithoutExtension}.bboxes.labels.tsv`;
+        const boundingBoxPath = `${this.exportFolderName}/${folderName}/${assetNameWithoutExtension}.bboxes.tsv`;
         const binaryPath = `${this.exportFolderName}/${folderName}/${assetMetadata.asset.name}`;
 
         await Promise.all([
